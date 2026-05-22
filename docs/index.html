@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CKA Practice Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    :root {
+      --bg-primary: #191f28;
+      --bg-secondary: #212830;
+      --bg-tertiary: #2b3240;
+      --bg-elevated: #323b4a;
+      --text-primary: #ffffff;
+      --text-secondary: #e2e8f0;
+      --text-tertiary: #94a3b8;
+      --border: #2b3240;
+      --accent-blue: #3182f6;
+      --accent-green: #34c759;
+      --accent-red: #ff4545;
+      --accent-orange: #f59e0b;
+      --accent-purple: #a855f7;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .sidebar {
+      width: 300px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .sidebar-header {
+      padding: 24px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-header h1 { font-size: 18px; font-weight: 700; }
+    .sidebar-header .subtitle { font-size: 13px; color: var(--text-tertiary); margin-top: 4px; }
+    .sidebar-header .note { font-size: 11px; color: var(--accent-orange); margin-top: 8px; padding: 6px 10px; background: rgba(245,158,11,0.1); border-radius: var(--radius-sm); }
+    .sidebar-search { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    .sidebar-search input {
+      width: 100%; padding: 10px 14px; background: var(--bg-tertiary); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text-primary); font-size: 13px; outline: none;
+    }
+    .sidebar-search input:focus { border-color: var(--accent-blue); }
+    .sidebar-search input::placeholder { color: var(--text-tertiary); }
+    .problem-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+    .problem-list::-webkit-scrollbar { width: 4px; }
+    .problem-list::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 4px; }
+    .domain-header {
+      padding: 12px 20px 6px; font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-tertiary);
+      position: sticky; top: 0; background: var(--bg-secondary); z-index: 1;
+    }
+    .domain-header .badge { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+    .problem-item {
+      padding: 10px 20px; cursor: pointer; display: flex; align-items: center; gap: 12px;
+      transition: background 0.15s; margin: 0 8px; border-radius: var(--radius-sm);
+    }
+    .problem-item:hover { background: var(--bg-tertiary); }
+    .problem-item.active { background: var(--accent-blue); }
+    .problem-item.active .problem-meta { color: rgba(255,255,255,0.7); }
+    .problem-item.active .problem-num { color: rgba(255,255,255,0.8); }
+    .problem-num { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-tertiary); min-width: 28px; }
+    .problem-info { flex: 1; min-width: 0; }
+    .problem-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .problem-meta { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+
+    .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .action-bar {
+      padding: 16px 24px; background: var(--bg-secondary); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .action-bar .title { font-size: 15px; font-weight: 600; margin-right: auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .btn {
+      padding: 8px 16px; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-solution { background: transparent; color: var(--accent-orange); border: 1px solid var(--accent-orange); }
+    .btn-solution:hover { background: rgba(245,158,11,0.1); }
+    .btn-problem { background: var(--accent-blue); color: #fff; }
+    .btn-problem:hover { background: #1b64da; }
+
+    .content { flex: 1; overflow-y: auto; padding: 32px; line-height: 1.7; }
+    .content::-webkit-scrollbar { width: 6px; }
+    .content::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 4px; }
+    .content h1 { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
+    .content h2 { font-size: 16px; font-weight: 600; margin: 28px 0 12px; color: var(--accent-blue); }
+    .content h3 { font-size: 14px; font-weight: 600; margin: 20px 0 8px; color: var(--text-secondary); }
+    .content p { margin: 8px 0; }
+    .content table { border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+    .content th, .content td { padding: 8px 16px; text-align: left; border: 1px solid var(--border); }
+    .content th { background: var(--bg-tertiary); font-weight: 600; }
+    .content code { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; background: var(--bg-tertiary); padding: 2px 7px; border-radius: 4px; color: var(--accent-blue); }
+    .content pre { background: var(--bg-tertiary); padding: 16px; border-radius: var(--radius-md); overflow-x: auto; margin: 12px 0; border: 1px solid var(--border); }
+    .content pre code { background: none; padding: 0; color: var(--text-primary); }
+    .content ol, .content ul { padding-left: 20px; margin: 8px 0; }
+    .content li { margin: 6px 0; }
+    .content blockquote { border-left: 3px solid var(--accent-blue); padding: 8px 16px; margin: 12px 0; background: rgba(49,130,246,0.05); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; color: var(--text-secondary); font-size: 13px; }
+    .content details { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 18px; margin: 10px 0; }
+    .content details[open] { background: var(--bg-elevated); }
+    .content summary { cursor: pointer; font-weight: 600; font-size: 13px; color: var(--accent-orange); }
+    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-tertiary); gap: 12px; }
+    .empty-state .icon { font-size: 48px; opacity: 0.5; }
+
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      .sidebar { width: 100%; height: 50vh; }
+      .main { height: 50vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h1>☸️ CKA Practice Lab</h1>
+      <div class="subtitle">killer.sh Level · 100 Problems</div>
+      <div class="note">📖 열람 전용 — 실행은 로컬에서 npm start</div>
+    </div>
+    <div class="sidebar-search">
+      <input type="text" placeholder="문제 검색..." oninput="filterProblems(this.value)">
+    </div>
+    <div class="problem-list" id="problem-list"></div>
+  </div>
+  <div class="main">
+    <div class="action-bar">
+      <span class="title" id="current-title">문제를 선택하세요</span>
+      <button class="btn btn-solution" id="btn-solution" onclick="toggleSolution()" style="display:none">💡 Solution</button>
+      <button class="btn btn-problem" id="btn-problem" onclick="showProblem()" style="display:none">← 문제</button>
+    </div>
+    <div class="content" id="content">
+      <div class="empty-state">
+        <div class="icon">☸️</div>
+        <div>왼쪽에서 문제를 선택하세요</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let data = [];
+    let currentId = null;
+    let showingSolution = false;
+
+    const DOMAINS = [
+      { name: 'Setup Guide', range: [0, 0], color: '#64748b' },
+      { name: 'Storage', range: [1, 10], color: '#34c759' },
+      { name: 'Troubleshooting', range: [11, 40], color: '#ff4545' },
+      { name: 'Workloads & Scheduling', range: [41, 55], color: '#3182f6' },
+      { name: 'Cluster Architecture', range: [56, 80], color: '#f59e0b' },
+      { name: 'Services & Networking', range: [81, 100], color: '#a855f7' },
+    ];
+
+    function getDomain(num) {
+      for (const d of DOMAINS) { if (num >= d.range[0] && num <= d.range[1]) return d; }
+      return { name: 'Unknown', color: '#666' };
+    }
+
+    async function init() {
+      const res = await fetch('data.json');
+      data = await res.json();
+      renderList(data);
+    }
+
+    function filterProblems(q) {
+      if (!q) { renderList(data); return; }
+      q = q.toLowerCase();
+      renderList(data.filter(p => p.id.includes(q) || p.title.toLowerCase().includes(q) || p.domain.toLowerCase().includes(q)));
+    }
+
+    function renderList(items) {
+      const el = document.getElementById('problem-list');
+      let html = '', curDomain = '';
+      for (const p of items) {
+        const num = parseInt(p.id);
+        const d = getDomain(num);
+        if (d.name !== curDomain) { curDomain = d.name; html += `<div class="domain-header"><span class="badge" style="background:${d.color}"></span>${d.name}</div>`; }
+        const short = p.title.replace(/^Problem \d+:\s*/, '');
+        html += `<div class="problem-item ${currentId===p.id?'active':''}" data-id="${p.id}" onclick="select('${p.id}')"><span class="problem-num">${p.id}</span><div class="problem-info"><div class="problem-name">${short}</div><div class="problem-meta">${p.time||''}</div></div></div>`;
+      }
+      el.innerHTML = html;
+    }
+
+    function select(id) {
+      currentId = id;
+      showingSolution = false;
+      const p = data.find(x => x.id === id);
+      document.getElementById('current-title').textContent = p.title;
+      document.getElementById('content').innerHTML = marked.parse(p.problem);
+      document.getElementById('btn-solution').style.display = p.solution ? '' : 'none';
+      document.getElementById('btn-problem').style.display = 'none';
+      document.querySelectorAll('.problem-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
+    }
+
+    function toggleSolution() {
+      const p = data.find(x => x.id === currentId);
+      if (!p) return;
+      showingSolution = true;
+      document.getElementById('content').innerHTML = marked.parse(p.solution);
+      document.getElementById('btn-solution').style.display = 'none';
+      document.getElementById('btn-problem').style.display = '';
+    }
+
+    function showProblem() { select(currentId); }
+
+    init();
+  </script>
+</body>
+</html>
