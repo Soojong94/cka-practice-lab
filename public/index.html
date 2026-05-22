@@ -507,6 +507,9 @@
       <button class="btn btn-cleanup" onclick="runAction('cleanup')" id="btn-cleanup" disabled>
         <span>✕</span> Cleanup
       </button>
+      <button class="btn btn-solution" onclick="toggleLang()" id="btn-lang" disabled style="background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border)">
+        🌐 EN
+      </button>
       <button class="btn btn-solution" onclick="showSolution()" id="btn-solution" disabled>
         <span>💡</span> Solution
       </button>
@@ -532,6 +535,8 @@
   <script>
     let currentProblem = null;
     let allProblems = [];
+    let lang = 'ko';
+    let hasEnglish = false;
 
     const DOMAINS = [
       { name: 'Storage', range: [1, 10], color: '#34c759' },
@@ -609,11 +614,14 @@
       document.getElementById('btn-validate').disabled = false;
       document.getElementById('btn-cleanup').disabled = false;
       document.getElementById('btn-solution').disabled = false;
+      document.getElementById('btn-lang').disabled = false;
 
       // 문제 로드
-      const res = await fetch(`/api/problems/${id}`);
+      const res = await fetch(`/api/problems/${id}?lang=${lang}`);
       const data = await res.json();
       document.getElementById('problem-content').innerHTML = data.html;
+      hasEnglish = data.hasEn;
+      updateLangBtn();
 
       // 타이틀 업데이트
       const prob = allProblems.find(p => p.id === id);
@@ -660,14 +668,34 @@
 
     async function showSolution() {
       if (!currentProblem) return;
-      const res = await fetch(`/api/problems/${currentProblem}/solution`);
+      const res = await fetch(`/api/problems/${currentProblem}/solution?lang=${lang}`);
       const data = await res.json();
       document.getElementById('problem-content').innerHTML =
         `<div style="margin-bottom:16px">
-          <button class="btn btn-cleanup" onclick="selectProblem('${currentProblem}')" style="font-size:12px;padding:6px 12px;">
+          <button class="btn btn-cleanup" onclick="selectProblem('${currentProblem}')" style="font-size:12px;padding:6px 12px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border);">
             ← 문제로 돌아가기
           </button>
         </div>` + data.html;
+    }
+
+    function toggleLang() {
+      lang = lang === 'ko' ? 'en' : 'ko';
+      updateLangBtn();
+      if (currentProblem) selectProblem(currentProblem);
+    }
+
+    function updateLangBtn() {
+      const btn = document.getElementById('btn-lang');
+      btn.innerHTML = lang === 'en' ? '🌐 KO' : '🌐 EN';
+      if (lang === 'en') {
+        btn.style.background = 'var(--accent-blue)';
+        btn.style.color = '#fff';
+        btn.style.borderColor = 'var(--accent-blue)';
+      } else {
+        btn.style.background = 'var(--bg-tertiary)';
+        btn.style.color = 'var(--text-secondary)';
+        btn.style.borderColor = 'var(--border)';
+      }
     }
 
     function appendTerminal(text, className) {

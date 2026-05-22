@@ -89,6 +89,9 @@
       cursor: pointer; transition: all 0.15s; white-space: nowrap;
     }
     .btn:active { transform: scale(0.97); }
+    .btn-lang { background: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border); }
+    .btn-lang:hover { background: var(--bg-elevated); color: var(--text-primary); }
+    .btn-lang.active { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
     .btn-solution { background: transparent; color: var(--accent-orange); border: 1px solid var(--accent-orange); }
     .btn-solution:hover { background: rgba(245,158,11,0.1); }
     .btn-problem { background: var(--accent-blue); color: #fff; }
@@ -138,6 +141,7 @@
   <div class="main">
     <div class="action-bar">
       <span class="title" id="current-title">문제를 선택하세요</span>
+      <button class="btn btn-lang" id="btn-lang" onclick="toggleLang()" style="display:none">🌐 EN</button>
       <button class="btn btn-solution" id="btn-solution" onclick="toggleSolution()" style="display:none">💡 Solution</button>
       <button class="btn btn-problem" id="btn-problem" onclick="showProblem()" style="display:none">← 문제</button>
     </div>
@@ -153,6 +157,7 @@
     let data = [];
     let currentId = null;
     let showingSolution = false;
+    let lang = 'ko'; // 'ko' or 'en'
 
     const DOMAINS = [
       { name: 'Setup Guide', range: [0, 0], color: '#64748b' },
@@ -198,9 +203,14 @@
       showingSolution = false;
       const p = data.find(x => x.id === id);
       document.getElementById('current-title').textContent = p.title;
-      document.getElementById('content').innerHTML = marked.parse(p.problem);
+      const md = (lang === 'en' && p.problem_en) ? p.problem_en : p.problem;
+      document.getElementById('content').innerHTML = marked.parse(md);
       document.getElementById('btn-solution').style.display = p.solution ? '' : 'none';
       document.getElementById('btn-problem').style.display = 'none';
+      // Show lang toggle if English version exists
+      const hasEn = p.problem_en && p.problem_en.length > 0;
+      document.getElementById('btn-lang').style.display = hasEn ? '' : 'none';
+      updateLangBtn();
       document.querySelectorAll('.problem-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
     }
 
@@ -208,12 +218,28 @@
       const p = data.find(x => x.id === currentId);
       if (!p) return;
       showingSolution = true;
-      document.getElementById('content').innerHTML = marked.parse(p.solution);
+      const md = (lang === 'en' && p.solution_en) ? p.solution_en : p.solution;
+      document.getElementById('content').innerHTML = marked.parse(md);
       document.getElementById('btn-solution').style.display = 'none';
       document.getElementById('btn-problem').style.display = '';
     }
 
     function showProblem() { select(currentId); }
+
+    function toggleLang() {
+      lang = lang === 'ko' ? 'en' : 'ko';
+      updateLangBtn();
+      if (currentId) {
+        if (showingSolution) toggleSolution();
+        else select(currentId);
+      }
+    }
+
+    function updateLangBtn() {
+      const btn = document.getElementById('btn-lang');
+      btn.textContent = lang === 'en' ? '🌐 KO' : '🌐 EN';
+      btn.classList.toggle('active', lang === 'en');
+    }
 
     init();
   </script>

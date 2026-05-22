@@ -18,6 +18,8 @@ for (const dir of dirs) {
 
   let problemMd = '';
   let solutionMd = '';
+  let problemEn = '';
+  let solutionEn = '';
   let title = `Problem ${dir}`;
   let domain = '';
   let time = '';
@@ -36,7 +38,17 @@ for (const dir of dirs) {
     solutionMd = fs.readFileSync(solutionPath, 'utf-8');
   }
 
-  problems.push({ id: dir, title, domain, time, problem: problemMd, solution: solutionMd });
+  // English versions
+  const problemEnPath = path.join(PROBLEMS_DIR, dir, 'problem_en.md');
+  const solutionEnPath = path.join(PROBLEMS_DIR, dir, 'solution_en.md');
+  if (fs.existsSync(problemEnPath)) {
+    problemEn = fs.readFileSync(problemEnPath, 'utf-8');
+  }
+  if (fs.existsSync(solutionEnPath)) {
+    solutionEn = fs.readFileSync(solutionEnPath, 'utf-8');
+  }
+
+  problems.push({ id: dir, title, domain, time, problem: problemMd, solution: solutionMd, problem_en: problemEn, solution_en: solutionEn });
 }
 
 if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR);

@@ -64,18 +64,33 @@ app.get('/api/problems', (req, res) => {
 
 // API: 문제 내용 (마크다운 → HTML)
 app.get('/api/problems/:id', (req, res) => {
-  const problemPath = path.join(PROBLEMS_DIR, req.params.id, 'problem.md');
+  const { id } = req.params;
+  const lang = req.query.lang || 'ko';
+  const filename = lang === 'en' ? 'problem_en.md' : 'problem.md';
+  let problemPath = path.join(PROBLEMS_DIR, id, filename);
+  // fallback to Korean if English doesn't exist
+  if (!fs.existsSync(problemPath)) {
+    problemPath = path.join(PROBLEMS_DIR, id, 'problem.md');
+  }
   if (!fs.existsSync(problemPath)) {
     return res.status(404).json({ error: 'Problem not found' });
   }
   const md = fs.readFileSync(problemPath, 'utf-8');
   const html = marked(md);
-  res.json({ markdown: md, html });
+  // Check if English version exists
+  const hasEn = fs.existsSync(path.join(PROBLEMS_DIR, id, 'problem_en.md'));
+  res.json({ markdown: md, html, hasEn });
 });
 
 // API: 정답 보기
 app.get('/api/problems/:id/solution', (req, res) => {
-  const solutionPath = path.join(PROBLEMS_DIR, req.params.id, 'solution.md');
+  const { id } = req.params;
+  const lang = req.query.lang || 'ko';
+  const filename = lang === 'en' ? 'solution_en.md' : 'solution.md';
+  let solutionPath = path.join(PROBLEMS_DIR, id, filename);
+  if (!fs.existsSync(solutionPath)) {
+    solutionPath = path.join(PROBLEMS_DIR, id, 'solution.md');
+  }
   if (!fs.existsSync(solutionPath)) {
     return res.status(404).json({ error: 'Solution not found' });
   }
