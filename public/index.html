@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CKA Practice Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #191f28;
+      --bg-secondary: #212830;
+      --bg-tertiary: #2b3240;
+      --bg-elevated: #323b4a;
+      --text-primary: #ffffff;
+      --text-secondary: #e2e8f0;
+      --text-tertiary: #94a3b8;
+      --border: #2b3240;
+      --accent-blue: #3182f6;
+      --accent-blue-hover: #1b64da;
+      --accent-green: #34c759;
+      --accent-red: #ff4545;
+      --accent-orange: #f59e0b;
+      --accent-purple: #a855f7;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 사이드바 */
+    .sidebar {
+      width: 300px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sidebar-header {
+      padding: 24px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-header .subtitle {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+
+    .sidebar-search {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-search input {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .sidebar-search input:focus {
+      border-color: var(--accent-blue);
+    }
+
+    .sidebar-search input::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    .problem-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    .problem-list::-webkit-scrollbar { width: 4px; }
+    .problem-list::-webkit-scrollbar-track { background: transparent; }
+    .problem-list::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 4px; }
+
+    .domain-header {
+      padding: 12px 20px 6px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-tertiary);
+      position: sticky;
+      top: 0;
+      background: var(--bg-secondary);
+      z-index: 1;
+    }
+
+    .domain-header .badge {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    .problem-item {
+      padding: 10px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: background 0.15s;
+      border-radius: 0;
+      margin: 0 8px;
+      border-radius: var(--radius-sm);
+    }
+
+    .problem-item:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .problem-item.active {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    .problem-item.active .problem-meta {
+      color: rgba(255,255,255,0.7);
+    }
+
+    .problem-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      min-width: 28px;
+    }
+
+    .problem-item.active .problem-num {
+      color: rgba(255,255,255,0.8);
+    }
+
+    .problem-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .problem-name {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .problem-meta {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+
+    /* 메인 */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* 액션 바 */
+    .action-bar {
+      padding: 16px 24px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .action-bar .problem-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-right: auto;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .btn-setup {
+      background: var(--accent-green);
+      color: #000;
+    }
+    .btn-setup:hover:not(:disabled) { background: #2db84e; }
+
+    .btn-validate {
+      background: var(--accent-blue);
+      color: #fff;
+    }
+    .btn-validate:hover:not(:disabled) { background: var(--accent-blue-hover); }
+
+    .btn-cleanup {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    .btn-cleanup:hover:not(:disabled) { background: var(--bg-elevated); color: var(--text-primary); }
+
+    .btn-solution {
+      background: transparent;
+      color: var(--accent-orange);
+      border: 1px solid var(--accent-orange);
+    }
+    .btn-solution:hover:not(:disabled) { background: rgba(245,158,11,0.1); }
+
+    /* 콘텐츠 */
+    .content-wrapper {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .problem-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px;
+      line-height: 1.7;
+    }
+
+    .problem-content::-webkit-scrollbar { width: 6px; }
+    .problem-content::-webkit-scrollbar-track { background: transparent; }
+    .problem-content::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 4px; }
+
+    .problem-content h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--text-primary);
+    }
+
+    .problem-content h2 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 28px 0 12px;
+      color: var(--accent-blue);
+    }
+
+    .problem-content p { margin: 8px 0; color: var(--text-primary); }
+
+    .problem-content table {
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 13px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .problem-content th, .problem-content td {
+      padding: 8px 16px;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+
+    .problem-content th {
+      background: var(--bg-tertiary);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .problem-content td { color: var(--text-primary); }
+
+    .problem-content code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      background: var(--bg-tertiary);
+      padding: 2px 7px;
+      border-radius: 4px;
+      color: var(--accent-blue);
+    }
+
+    .problem-content pre {
+      background: var(--bg-tertiary);
+      padding: 16px;
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      margin: 12px 0;
+      border: 1px solid var(--border);
+    }
+
+    .problem-content pre code {
+      background: none;
+      padding: 0;
+      color: var(--text-primary);
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+
+    .problem-content ol, .problem-content ul {
+      padding-left: 20px;
+      margin: 8px 0;
+    }
+
+    .problem-content li {
+      margin: 6px 0;
+      color: var(--text-primary);
+    }
+
+    .problem-content blockquote {
+      border-left: 3px solid var(--accent-blue);
+      padding: 8px 16px;
+      margin: 12px 0;
+      background: rgba(49,130,246,0.05);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .problem-content details {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      margin: 10px 0;
+      transition: all 0.2s;
+    }
+
+    .problem-content details[open] {
+      background: var(--bg-elevated);
+    }
+
+    .problem-content summary {
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--accent-orange);
+      user-select: none;
+    }
+
+    .problem-content details > *:not(summary) {
+      margin-top: 10px;
+    }
+
+    /* 터미널 */
+    .terminal-panel {
+      width: 380px;
+      background: #0f1419;
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .terminal-header {
+      padding: 12px 16px;
+      background: #161b22;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .terminal-header span {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .terminal-header button {
+      background: none;
+      border: none;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .terminal-header button:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+    }
+
+    .terminal-output {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: var(--text-secondary);
+    }
+
+    .terminal-output::-webkit-scrollbar { width: 4px; }
+    .terminal-output::-webkit-scrollbar-track { background: transparent; }
+    .terminal-output::-webkit-scrollbar-thumb { background: #2b3240; border-radius: 4px; }
+
+    .terminal-output .pass { color: var(--accent-green); }
+    .terminal-output .fail { color: var(--accent-red); }
+    .terminal-output .info { color: var(--accent-blue); }
+    .terminal-output .warn { color: var(--accent-orange); }
+
+    /* 빈 상태 */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-tertiary);
+      gap: 12px;
+    }
+
+    .empty-state .icon {
+      font-size: 48px;
+      opacity: 0.5;
+    }
+
+    .empty-state .text {
+      font-size: 14px;
+    }
+
+    /* 로딩 스피너 */
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    .btn-setup .spinner { border-top-color: #000; border-color: rgba(0,0,0,0.2); }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 반응형 */
+    @media (max-width: 1200px) {
+      .terminal-panel { width: 320px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h1>☸️ CKA Practice Lab</h1>
+      <div class="subtitle">killer.sh Level · 100 Problems</div>
+    </div>
+    <div class="sidebar-search">
+      <input type="text" id="search-input" placeholder="문제 검색..." oninput="filterProblems(this.value)">
+    </div>
+    <div class="problem-list" id="problem-list"></div>
+  </div>
+
+  <div class="main">
+    <div class="action-bar">
+      <span class="problem-title" id="current-title">문제를 선택하세요</span>
+      <button class="btn btn-setup" onclick="runAction('setup')" id="btn-setup" disabled>
+        <span>▶</span> Setup
+      </button>
+      <button class="btn btn-validate" onclick="runAction('validate')" id="btn-validate" disabled>
+        <span>✓</span> Validate
+      </button>
+      <button class="btn btn-cleanup" onclick="runAction('cleanup')" id="btn-cleanup" disabled>
+        <span>✕</span> Cleanup
+      </button>
+      <button class="btn btn-solution" onclick="showSolution()" id="btn-solution" disabled>
+        <span>💡</span> Solution
+      </button>
+    </div>
+
+    <div class="content-wrapper">
+      <div class="problem-content" id="problem-content">
+        <div class="empty-state">
+          <div class="icon">☸️</div>
+          <div class="text">왼쪽에서 문제를 선택하세요</div>
+        </div>
+      </div>
+      <div class="terminal-panel">
+        <div class="terminal-header">
+          <span>Output</span>
+          <button onclick="clearTerminal()">Clear</button>
+        </div>
+        <div class="terminal-output" id="terminal-output">$ ready\n</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentProblem = null;
+    let allProblems = [];
+
+    const DOMAINS = [
+      { name: 'Storage', range: [1, 10], color: '#34c759' },
+      { name: 'Troubleshooting', range: [11, 40], color: '#ff4545' },
+      { name: 'Workloads & Scheduling', range: [41, 55], color: '#3182f6' },
+      { name: 'Cluster Architecture', range: [56, 80], color: '#f59e0b' },
+      { name: 'Services & Networking', range: [81, 100], color: '#a855f7' },
+    ];
+
+    function getDomain(num) {
+      for (const d of DOMAINS) {
+        if (num >= d.range[0] && num <= d.range[1]) return d;
+      }
+      return { name: 'Unknown', color: '#666' };
+    }
+
+    async function loadProblems() {
+      const res = await fetch('/api/problems');
+      allProblems = await res.json();
+      renderProblemList(allProblems);
+    }
+
+    function filterProblems(query) {
+      if (!query) {
+        renderProblemList(allProblems);
+        return;
+      }
+      const q = query.toLowerCase();
+      const filtered = allProblems.filter(p =>
+        p.id.includes(q) || p.title.toLowerCase().includes(q) || p.domain.toLowerCase().includes(q)
+      );
+      renderProblemList(filtered);
+    }
+
+    function renderProblemList(problems) {
+      const list = document.getElementById('problem-list');
+      let html = '';
+      let currentDomain = '';
+
+      for (const p of problems) {
+        const num = parseInt(p.id);
+        const domain = getDomain(num);
+
+        if (domain.name !== currentDomain) {
+          currentDomain = domain.name;
+          html += `<div class="domain-header"><span class="badge" style="background:${domain.color}"></span>${domain.name}</div>`;
+        }
+
+        const shortTitle = p.title.replace(/^Problem \d+:\s*/, '');
+        const isActive = currentProblem === p.id ? 'active' : '';
+
+        html += `
+          <div class="problem-item ${isActive}" data-id="${p.id}" onclick="selectProblem('${p.id}')">
+            <span class="problem-num">${p.id}</span>
+            <div class="problem-info">
+              <div class="problem-name">${shortTitle}</div>
+              <div class="problem-meta">${p.time || ''}</div>
+            </div>
+          </div>`;
+      }
+
+      list.innerHTML = html;
+    }
+
+    async function selectProblem(id) {
+      currentProblem = id;
+
+      // 사이드바 활성화
+      document.querySelectorAll('.problem-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.id === id);
+      });
+
+      // 버튼 활성화
+      document.getElementById('btn-setup').disabled = false;
+      document.getElementById('btn-validate').disabled = false;
+      document.getElementById('btn-cleanup').disabled = false;
+      document.getElementById('btn-solution').disabled = false;
+
+      // 문제 로드
+      const res = await fetch(`/api/problems/${id}`);
+      const data = await res.json();
+      document.getElementById('problem-content').innerHTML = data.html;
+
+      // 타이틀 업데이트
+      const prob = allProblems.find(p => p.id === id);
+      document.getElementById('current-title').textContent = prob ? prob.title : `Problem ${id}`;
+    }
+
+    async function runAction(action) {
+      if (!currentProblem) return;
+
+      const btn = document.getElementById(`btn-${action}`);
+      const originalHTML = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner"></span> Running...`;
+
+      appendTerminal(`\n$ ${action} problems/${currentProblem}\n`, 'info');
+
+      try {
+        const res = await fetch(`/api/problems/${currentProblem}/${action}`, { method: 'POST' });
+        const data = await res.json();
+
+        let output = data.output;
+        output = output.replace(/\[PASS\]/g, '<span class="pass">[PASS]</span>');
+        output = output.replace(/\[FAIL\]/g, '<span class="fail">[FAIL]</span>');
+        output = output.replace(/\[OK\]/g, '<span class="pass">[OK]</span>');
+        output = output.replace(/\[ERROR\]/g, '<span class="fail">[ERROR]</span>');
+        output = output.replace(/\[INFO\]/g, '<span class="info">[INFO]</span>');
+        output = output.replace(/Score: (\d+)\/(\d+) \((\d+)%\)/g, (match, pass, total, pct) => {
+          const color = parseInt(pct) === 100 ? 'pass' : parseInt(pct) > 0 ? 'warn' : 'fail';
+          return `<span class="${color}">${match}</span>`;
+        });
+
+        appendTerminal(output);
+
+        if (!data.success && data.exitCode) {
+          appendTerminal(`exit: ${data.exitCode}\n`, 'warn');
+        }
+      } catch (err) {
+        appendTerminal(`Error: ${err.message}\n`, 'fail');
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = originalHTML;
+    }
+
+    async function showSolution() {
+      if (!currentProblem) return;
+      const res = await fetch(`/api/problems/${currentProblem}/solution`);
+      const data = await res.json();
+      document.getElementById('problem-content').innerHTML =
+        `<div style="margin-bottom:16px">
+          <button class="btn btn-cleanup" onclick="selectProblem('${currentProblem}')" style="font-size:12px;padding:6px 12px;">
+            ← 문제로 돌아가기
+          </button>
+        </div>` + data.html;
+    }
+
+    function appendTerminal(text, className) {
+      const terminal = document.getElementById('terminal-output');
+      if (className) {
+        terminal.innerHTML += `<span class="${className}">${text}</span>`;
+      } else {
+        terminal.innerHTML += text;
+      }
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    function clearTerminal() {
+      document.getElementById('terminal-output').innerHTML = '$ ready\n';
+    }
+
+    loadProblems();
+  </script>
+</body>
+</html>
