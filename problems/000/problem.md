@@ -61,7 +61,7 @@ macOS/Linux는 기본 bash를 사용하므로 별도 설치 불필요.
 
 ```bash
 # 1. 저장소 클론
-git clone https://github.com/YOUR_USERNAME/cka-practice-lab.git
+git clone https://github.com/soojong94/cka-practice-lab.git
 cd cka-practice-lab
 
 # 2. 의존성 설치

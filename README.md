@@ -8,7 +8,7 @@ Docker Desktop 로컬 쿠버네티스 클러스터에서 100개의 실전 문제
 
 ```bash
 # 1. 클론
-git clone https://github.com/YOUR_USERNAME/cka-practice-lab.git
+git clone https://github.com/soojong94/cka-practice-lab.git
 cd cka-practice-lab
 
 # 2. 의존성 설치
