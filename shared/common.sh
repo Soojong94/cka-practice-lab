@@ -90,3 +90,80 @@ print_setup_complete() {
   echo -e " 문제를 확인하세요: ${YELLOW}$problem_dir/problem.md${NC}"
   echo -e "${BLUE}=========================================${NC}"
 }
+
+# 문제 환경 정리 (모든 cleanup.sh가 이 함수를 사용)
+# 사용법: cleanup_problem <문제번호> [kind/name ...]
+#   - cka-q<번호>, cka-<번호>-* 네임스페이스를 자동으로 찾아 삭제
+#   - 그 네임스페이스의 PVC에 묶였던 PV는 이름을 몰라도 자동으로 찾아 삭제
+#   - 인자로 받은 클러스터 범위 리소스(pv/x, storageclass/y, crd/z ...) 삭제
+#   - 삭제 요청은 기다리지 않고 한꺼번에 보낸 뒤, 마지막에 완료 여부를 확인
+#     (PV는 PVC가, PVC는 네임스페이스가 지워져야 사라지므로 순서대로 기다리면 멈춤)
+#   - CLEANUP_TIMEOUT(기본 60)초가 지나도 남아 있으면 finalizer를 제거해 강제 정리
+cleanup_problem() {
+  local id=$1; shift
+  local ns_re="^cka-q?${id}(-|\$)"
+  local timeout=${CLEANUP_TIMEOUT:-60}
+  local namespaces pvs targets r ns left i
+
+  namespaces=$(kubectl get namespaces -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | grep -E "$ns_re")
+  pvs=$(kubectl get pv -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.spec.claimRef.namespace}{"\n"}{end}' 2>/dev/null \
+    | awk -v re="$ns_re" '$2 ~ re {print "persistentvolume/" $1}')
+  targets=$(printf '%s\n' "$@" $pvs | awk 'NF && !seen[$0]++')
+
+  # 1) 삭제 요청 (기다리지 않음)
+  for r in $targets; do
+    kubectl get "$r" &>/dev/null || continue
+    kubectl delete "$r" --wait=false >/dev/null 2>&1 && \
+      echo -e "${GREEN}[OK] $r 삭제 요청${NC}"
+  done
+  if [ -z "$namespaces" ]; then
+    echo -e "${YELLOW}[INFO] 남아 있는 네임스페이스 없음${NC}"
+  fi
+  for ns in $namespaces; do
+    kubectl -n "$ns" delete pods --all --grace-period=0 --force --wait=false >/dev/null 2>&1
+    kubectl delete namespace "$ns" --wait=false >/dev/null 2>&1 && \
+      echo -e "${GREEN}[OK] 네임스페이스 '$ns' 삭제 요청${NC}"
+  done
+
+  # 2) 완료 대기
+  _cleanup_left() {
+    local x
+    for x in $namespaces; do kubectl get namespace "$x" &>/dev/null && echo "namespace/$x"; done
+    for x in $targets; do kubectl get "$x" &>/dev/null && echo "$x"; done
+  }
+  [ -z "$namespaces$targets" ] && return 0
+  echo -e "${YELLOW}[INFO] 삭제 완료 대기 중 (최대 ${timeout}초)...${NC}"
+  for ((i = 0; i < timeout; i += 2)); do
+    left=$(_cleanup_left)
+    [ -z "$left" ] && break
+    sleep 2
+  done
+
+  # 3) 그래도 남아 있으면 finalizer 제거 후 재확인
+  if [ -n "$left" ]; then
+    echo -e "${YELLOW}[INFO] 아직 남은 리소스 강제 정리: $(echo $left)${NC}"
+    local types obj
+    types=$(kubectl api-resources --verbs=list --namespaced -o name 2>/dev/null | paste -sd, -)
+    for r in $left; do
+      if [[ $r == namespace/* ]]; then
+        for obj in $(kubectl -n "${r#namespace/}" get "$types" -o name 2>/dev/null); do
+          kubectl -n "${r#namespace/}" patch "$obj" --type=merge -p '{"metadata":{"finalizers":null}}' >/dev/null 2>&1
+        done
+      else
+        kubectl patch "$r" --type=merge -p '{"metadata":{"finalizers":null}}' >/dev/null 2>&1
+      fi
+    done
+    for ((i = 0; i < 20; i += 2)); do
+      left=$(_cleanup_left)
+      [ -z "$left" ] && break
+      sleep 2
+    done
+  fi
+
+  if [ -n "$left" ]; then
+    echo -e "${RED}[WARN] 정리되지 않은 리소스: $(echo $left)${NC}" >&2
+    echo "  kubectl get $(echo $left | tr ' ' ',') -o yaml 로 상태를 확인하세요." >&2
+    return 1
+  fi
+  echo -e "${GREEN}[OK] 모든 리소스 삭제 확인${NC}"
+}

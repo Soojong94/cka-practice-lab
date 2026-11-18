@@ -3,21 +3,11 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../../shared/common.sh"
 
-NS_A="cka-q096-a"
-NS_B="cka-q096-b"
-
 check_cluster
 
 echo -e "${YELLOW}[INFO] Problem 096 환경 정리 시작...${NC}"
 
-for NS in "$NS_A" "$NS_B"; do
-  if kubectl get namespace "$NS" &>/dev/null; then
-    kubectl delete namespace "$NS" --grace-period=0 --force 2>/dev/null && \
-      echo -e "${GREEN}[OK] 네임스페이스 '$NS' 삭제 요청됨${NC}" || \
-      echo -e "${RED}[WARN] 네임스페이스 '$NS' 삭제 실패${NC}" >&2
-  else
-    echo -e "${YELLOW}[INFO] 네임스페이스 '$NS' 이미 없음${NC}"
-  fi
-done
+# 네임스페이스(cka-q096*)와 그 PV, 아래 클러스터 리소스를 한 번에 정리
+cleanup_problem 096 || exit 1
 
 echo -e "${GREEN}[완료] Problem 096 환경 정리 완료${NC}"
