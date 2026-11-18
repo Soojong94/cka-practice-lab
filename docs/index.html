@@ -260,5 +260,14 @@
 
     init();
   </script>
+  <script>
+    // 문제/해설 안의 외부 링크(공식 문서 등)는 새 탭으로 열기
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[href]');
+      if (!a || a.origin === location.origin) return;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+    }, true);
+  </script>
 </body>
 </html>
