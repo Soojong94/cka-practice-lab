@@ -70,7 +70,7 @@ fi
 # Task 5: nginx가 커스텀 설정으로 응답하는지 확인
 TOTAL=$((TOTAL+1))
 if [ -n "$POD_NAME" ]; then
-  RESPONSE=$(kubectl -n "$NAMESPACE" exec "$POD_NAME" -- wget -qO- http://localhost 2>/dev/null)
+  RESPONSE=$(kubectl -n "$NAMESPACE" exec "$POD_NAME" -- wget -qO- http://127.0.0.1 2>/dev/null)
   if echo "$RESPONSE" | grep -q "Hello from CKA ConfigMap Lab"; then
     print_pass "Task 5: nginx가 커스텀 설정으로 응답 확인"
     PASS=$((PASS+1))

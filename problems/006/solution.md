@@ -53,7 +53,7 @@ kubectl -n cka-q006 exec $POD -- cat /etc/nginx/conf.d/custom.conf
 ## Step 5: nginx 응답 확인
 
 ```bash
-kubectl -n cka-q006 exec $POD -- wget -qO- http://localhost
+kubectl -n cka-q006 exec $POD -- wget -qO- http://127.0.0.1
 # 출력: Hello from CKA ConfigMap Lab!
 ```
 

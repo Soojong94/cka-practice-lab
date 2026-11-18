@@ -44,6 +44,7 @@ fi
 # Task 4: manifest-path 값 확인
 TOTAL=$((TOTAL+1))
 MANIFEST_PATH=$(kubectl -n "$NAMESPACE" get configmap service-cidr-answer -o jsonpath='{.data.manifest-path}' 2>/dev/null)
+MANIFEST_PATH=$(unmangle_path "$MANIFEST_PATH")
 if [ "$MANIFEST_PATH" = "/etc/kubernetes/manifests/kube-apiserver.yaml" ]; then
   print_pass "Task 4: 'manifest-path' 값 올바름"
   PASS=$((PASS+1))

@@ -55,6 +55,18 @@ npm --version
 - 설치 시 기본 옵션 유지
 - 설치 후 `C:\Program Files\Git\bin\bash.exe` 존재 확인
 
+**Git Bash 경로 변환 설정 (필수)**
+
+Git Bash는 `/etc/...`, `/var/...` 같은 리눅스 경로를 `C:/Program Files/Git/etc/...`처럼 Windows 경로로 자동 변환합니다. 그래서 `kubectl exec pod -- cat /etc/config/app.conf` 같은 명령이 엉뚱한 경로를 찾거나, ConfigMap에 적은 경로 답이 오답 처리될 수 있습니다. Git Bash에서 아래 명령을 한 번 실행해 두세요.
+
+```bash
+echo 'export MSYS2_ARG_CONV_EXCL="/CN=;/bin;/sbin;/lib;/etc;/var;/usr;/opt;/srv;/run;/proc;/sys;/dev;/root;/home;/shared;/data;/mnt;/app;/config;/logs"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+- `/tmp/...` 경로(문제에서 만드는 kubeconfig, 인증서 파일 등)는 계속 변환되어야 하므로 목록에 넣지 않습니다.
+- PowerShell을 사용하면 이 설정은 필요 없습니다.
+
 macOS/Linux는 기본 bash를 사용하므로 별도 설치 불필요.
 
 ### 6. 프로젝트 클론 및 실행

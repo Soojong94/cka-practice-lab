@@ -12,7 +12,7 @@ check_cluster
 # Task 1: Pod 존재 및 2개 컨테이너 확인
 TOTAL=$((TOTAL+1))
 if kubectl -n "$NAMESPACE" get pod app-with-sidecar &>/dev/null; then
-  CONTAINER_COUNT=$(kubectl -n "$NAMESPACE" get pod app-with-sidecar -o jsonpath='{.spec.containers}' | grep -o '"name"' | wc -l)
+  CONTAINER_COUNT=$(kubectl -n "$NAMESPACE" get pod app-with-sidecar -o jsonpath='{.spec.containers[*].name}' 2>/dev/null | wc -w)
   if [ "$CONTAINER_COUNT" -eq 2 ]; then
     print_pass "Task 1: Pod 'app-with-sidecar'에 2개 컨테이너 존재"
     PASS=$((PASS+1))

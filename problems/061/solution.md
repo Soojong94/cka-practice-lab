@@ -4,15 +4,18 @@
 
 ```bash
 kubectl -n cka-q061 get configmap cluster-info -o yaml
+
+# 업그레이드 대상 노드 이름 (Docker Desktop 기본: docker-desktop)
+NODE=$(kubectl -n cka-q061 get configmap cluster-info -o jsonpath='{.data.node-name}')
 ```
 
 ## Step 2: ConfigMap 생성
 
 ```bash
 kubectl -n cka-q061 create configmap upgrade-procedure \
-  --from-literal=step1="kubectl drain <node-name> --ignore-daemonsets --delete-emptydir-data" \
+  --from-literal=step1="kubectl drain $NODE --ignore-daemonsets --delete-emptydir-data" \
   --from-literal=step2="kubeadm upgrade plan && kubeadm upgrade apply v1.29.0" \
-  --from-literal=step3="systemctl daemon-reload && systemctl restart kubelet && kubectl uncordon <node-name>" \
+  --from-literal=step3="systemctl daemon-reload && systemctl restart kubelet && kubectl uncordon $NODE" \
   --from-literal=upgrade-order="drain,upgrade-kubeadm,upgrade-apply,upgrade-kubelet,restart-kubelet,uncordon"
 ```
 

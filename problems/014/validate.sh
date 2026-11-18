@@ -55,6 +55,7 @@ fi
 # Task 5: config-path 확인
 TOTAL=$((TOTAL+1))
 CONFIG_PATH=$(kubectl -n "$NAMESPACE" get configmap kubelet-answer -o jsonpath='{.data.config-path}' 2>/dev/null)
+CONFIG_PATH=$(unmangle_path "$CONFIG_PATH")
 if [ "$CONFIG_PATH" = "/var/lib/kubelet/config.yaml" ]; then
   print_pass "Task 5: config-path 올바름"
   PASS=$((PASS+1))

@@ -22,23 +22,19 @@ kubectl get sc -o jsonpath='{range .items[?(@.metadata.annotations.storageclass\
 ## Step 4: ConfigMap 수정
 
 ```bash
-# Docker Desktop 환경 기준
-CSI_DRIVERS=$(kubectl get csidrivers -o jsonpath='{.items[*].metadata.name}' 2>/dev/null || echo "none")
-SC_INFO=$(kubectl get sc -o custom-columns=NAME:.metadata.name,PROVISIONER:.provisioner --no-headers 2>/dev/null)
+# CSI 드라이버가 없는 클러스터(Docker Desktop, kind 등)는 "none"으로 기록
+CSI_DRIVERS=$(kubectl get csidrivers -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
+CSI_DRIVERS=${CSI_DRIVERS:-none}
+# "<이름>: <provisioner>" 형식, StorageClass가 여러 개면 여러 줄
+SC_INFO=$(kubectl get sc -o jsonpath='{range .items[*]}{.metadata.name}: {.provisioner}{"\n"}{end}')
 DEFAULT_SC=$(kubectl get sc -o jsonpath='{range .items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")]}{.metadata.name}{end}' 2>/dev/null)
 
-kubectl -n cka-q077 apply -f - <<EOF
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: csi-info
-  namespace: cka-q077
-data:
-  csi-drivers: "$CSI_DRIVERS"
-  storage-classes: |
-    $SC_INFO
-  default-storage-class: "$DEFAULT_SC"
-EOF
+# 여러 줄 값도 안전하게 넣도록 --from-literal 사용 (heredoc YAML은 들여쓰기가 깨짐)
+kubectl -n cka-q077 create configmap csi-info \
+  --from-literal=csi-drivers="$CSI_DRIVERS" \
+  --from-literal=storage-classes="$SC_INFO" \
+  --from-literal=default-storage-class="$DEFAULT_SC" \
+  --dry-run=client -o yaml | kubectl apply -f -
 ```
 
 ## 핵심 개념

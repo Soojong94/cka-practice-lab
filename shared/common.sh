@@ -9,6 +9,18 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Windows Git Bash 대응: kubectl(Windows 프로그램)에 넘기는 리눅스 경로를 변환하지 않음
+# 예) kubectl exec pod -- cat /etc/secrets/x 가 C:/Program Files/Git/etc/secrets/x 로 바뀌는 문제
+# openssl -subj "/CN=..." 도 경로로 오인되므로 제외
+# /tmp는 로컬 파일(kubeconfig 등)을 가리키므로 기존대로 변환
+export MSYS2_ARG_CONV_EXCL="/CN=;/etc;/var;/usr;/opt;/srv;/run;/proc;/sys;/dev;/root;/home;/shared;/data;/mnt;/app;/config;/logs"
+
+# 학생이 Git Bash에서 입력해 Windows 경로로 바뀐 값을 리눅스 경로로 되돌림
+# 예) C:/Program Files/Git/etc/kubernetes/pki/ca.crt → /etc/kubernetes/pki/ca.crt
+unmangle_path() {
+  printf '%s' "$1" | sed -E 's#^[A-Za-z]:/Program Files/Git##'
+}
+
 # 클러스터 연결 확인
 check_cluster() {
   if ! kubectl cluster-info &>/dev/null; then

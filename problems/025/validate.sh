@@ -21,6 +21,7 @@ fi
 # Task 2: ca-cert 경로 확인
 TOTAL=$((TOTAL+1))
 CA_CERT=$(kubectl -n "$NAMESPACE" get configmap etcd-commands -o jsonpath='{.data.ca-cert}' 2>/dev/null)
+CA_CERT=$(unmangle_path "$CA_CERT")
 if [ "$CA_CERT" = "/etc/kubernetes/pki/etcd/ca.crt" ]; then
   print_pass "Task 2: 'ca-cert' 경로 올바름"
   PASS=$((PASS+1))
@@ -31,7 +32,9 @@ fi
 # Task 3: server-cert, server-key 경로 확인
 TOTAL=$((TOTAL+1))
 SERVER_CERT=$(kubectl -n "$NAMESPACE" get configmap etcd-commands -o jsonpath='{.data.server-cert}' 2>/dev/null)
+SERVER_CERT=$(unmangle_path "$SERVER_CERT")
 SERVER_KEY=$(kubectl -n "$NAMESPACE" get configmap etcd-commands -o jsonpath='{.data.server-key}' 2>/dev/null)
+SERVER_KEY=$(unmangle_path "$SERVER_KEY")
 if [ "$SERVER_CERT" = "/etc/kubernetes/pki/etcd/server.crt" ] && [ "$SERVER_KEY" = "/etc/kubernetes/pki/etcd/server.key" ]; then
   print_pass "Task 3: 'server-cert'와 'server-key' 경로 올바름"
   PASS=$((PASS+1))

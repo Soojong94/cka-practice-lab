@@ -44,7 +44,7 @@ TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
 CACERT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
 curl -s --cacert $CACERT -H "Authorization: Bearer $TOKEN" \
   https://kubernetes.default.svc/api/v1/namespaces/cka-q060/secrets | \
-  grep -o "\"name\":\"[^\"]*\"" | cut -d\" -f4 | tr "\n" "," | sed "s/,$//"
+  grep -o "\"name\": *\"[^\"]*\"" | cut -d\" -f4 | tr "\n" "," | sed "s/,$//"
 ')
 
 # 응답 코드 확인

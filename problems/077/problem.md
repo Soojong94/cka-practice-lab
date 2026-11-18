@@ -17,7 +17,7 @@
 ## Tasks
 
 1. 클러스터에 등록된 CSI 드라이버 목록을 확인하고 ConfigMap `csi-info`의 `csi-drivers` 키에 기록하세요.
-   - `kubectl get csidrivers` 명령어 사용
+   - `kubectl get csidrivers` 명령어 사용 (등록된 드라이버가 없으면 `none`으로 기록)
 
 2. 클러스터의 StorageClass 목록을 확인하고 각 StorageClass의 provisioner를 ConfigMap `csi-info`의 `storage-classes` 키에 기록하세요.
    - 형식: `<StorageClass이름>: <provisioner>`

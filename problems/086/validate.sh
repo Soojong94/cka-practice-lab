@@ -43,9 +43,9 @@ fi
 
 # Task 4: Egress 규칙에 port 5432 포함 확인
 TOTAL=$((TOTAL+1))
-EGRESS_JSON=$(kubectl -n "$NAMESPACE" get networkpolicy app-egress -o json 2>/dev/null)
-HAS_5432=$(echo "$EGRESS_JSON" | grep -o '"port":5432' | head -1)
-HAS_53=$(echo "$EGRESS_JSON" | grep -o '"port":53' | head -1)
+EGRESS_PORTS=$(kubectl -n "$NAMESPACE" get networkpolicy app-egress -o jsonpath='{.spec.egress[*].ports[*].port}' 2>/dev/null)
+HAS_5432=$(echo "$EGRESS_PORTS" | tr ' ' '\n' | grep -x 5432 | head -1)
+HAS_53=$(echo "$EGRESS_PORTS" | tr ' ' '\n' | grep -x 53 | head -1)
 if [ -n "$HAS_5432" ] && [ -n "$HAS_53" ]; then
   print_pass "Task 4: Egress 규칙에 port 5432(db)와 port 53(DNS) 포함"
   PASS=$((PASS+1))
