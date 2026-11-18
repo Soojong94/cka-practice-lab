@@ -9,7 +9,7 @@ check_cluster
 
 echo -e "${YELLOW}[INFO] Problem 090 환경 정리 시작...${NC}"
 
-kubectl delete gatewayclass example-gc-090 --ignore-not-found 2>/dev/null || true
+kubectl delete gatewayclass example-gc-090 --ignore-not-found --wait=false 2>/dev/null || true
 
 if kubectl get namespace "$NAMESPACE" &>/dev/null; then
   kubectl delete namespace "$NAMESPACE" --grace-period=0 --force 2>/dev/null && \

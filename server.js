@@ -130,7 +130,10 @@ app.post('/api/problems/:id/:action', (req, res) => {
     env: { ...process.env, TERM: 'dumb' },
     shell: true
   }, (error, stdout, stderr) => {
-    const output = stripAnsi(stdout + (stderr ? '\n' + stderr : ''));
+    let output = stripAnsi(stdout + (stderr ? '\n' + stderr : ''));
+    if (error && error.killed) {
+      output += `\n[ERROR] ${action}.sh가 120초 안에 끝나지 않아 중단됐습니다. 출력이 중간에 끊겼을 수 있습니다.`;
+    }
     res.json({
       success: !error,
       exitCode: error ? error.code : 0,

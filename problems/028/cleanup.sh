@@ -10,11 +10,11 @@ check_cluster
 echo -e "${YELLOW}[INFO] Problem 028 환경 정리 시작...${NC}"
 
 # StorageClass 삭제
-kubectl delete storageclass fast-ssd --ignore-not-found 2>/dev/null && \
+kubectl delete storageclass fast-ssd --ignore-not-found --wait=false 2>/dev/null && \
   echo -e "${GREEN}[OK] StorageClass 'fast-ssd' 삭제됨${NC}" || true
 
 # PV 삭제
-kubectl delete pv data-pv --ignore-not-found 2>/dev/null && \
+kubectl delete pv data-pv --ignore-not-found --wait=false 2>/dev/null && \
   echo -e "${GREEN}[OK] PV 'data-pv' 삭제됨${NC}" || true
 
 # 네임스페이스 삭제 (네임스페이스 내 모든 리소스 일괄 제거)

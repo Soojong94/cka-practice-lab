@@ -10,7 +10,7 @@ check_cluster
 echo -e "${YELLOW}[INFO] Problem 050 환경 정리 시작...${NC}"
 
 # PriorityClass 삭제
-kubectl delete priorityclass high-priority --ignore-not-found 2>/dev/null && \
+kubectl delete priorityclass high-priority --ignore-not-found --wait=false 2>/dev/null && \
   echo -e "${GREEN}[OK] PriorityClass 'high-priority' 삭제됨${NC}" || true
 
 # 네임스페이스 삭제

@@ -7,7 +7,7 @@ check_cluster
 
 echo -e "${YELLOW}[INFO] Problem 002 환경 정리 시작...${NC}"
 
-kubectl delete sc local-backup --ignore-not-found 2>/dev/null && \
+kubectl delete sc local-backup --ignore-not-found --wait=false 2>/dev/null && \
   echo -e "${GREEN}[OK] StorageClass 'local-backup' 삭제됨${NC}" || true
 
 if kubectl get namespace "$NAMESPACE" &>/dev/null; then

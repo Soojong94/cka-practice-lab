@@ -10,9 +10,9 @@ check_cluster
 echo -e "${YELLOW}[INFO] Problem 065 환경 정리 시작...${NC}"
 
 # 클러스터 범위 리소스 삭제
-kubectl delete clusterrolebinding app-controller-binding-q065 --ignore-not-found 2>/dev/null || true
-kubectl delete clusterrole app-controller-role-q065 --ignore-not-found 2>/dev/null || true
-kubectl delete crd apps.operator.example.com --ignore-not-found 2>/dev/null && \
+kubectl delete clusterrolebinding app-controller-binding-q065 --ignore-not-found --wait=false 2>/dev/null || true
+kubectl delete clusterrole app-controller-role-q065 --ignore-not-found --wait=false 2>/dev/null || true
+kubectl delete crd apps.operator.example.com --ignore-not-found --wait=false 2>/dev/null && \
   echo -e "${GREEN}[OK] CRD 'apps.operator.example.com' 삭제됨${NC}" || true
 
 # 네임스페이스 삭제
