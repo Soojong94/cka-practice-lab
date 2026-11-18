@@ -11,13 +11,15 @@ check_cluster
 
 # Task 1: 노드가 uncordon 상태 (최종 상태)
 TOTAL=$((TOTAL+1))
-NODE_SCHED=$(kubectl get node docker-desktop -o jsonpath='{.spec.unschedulable}' 2>/dev/null)
+NODE_NAME=$(kubectl -n "$NAMESPACE" get configmap drain-target -o jsonpath='{.data.node}' 2>/dev/null)
+NODE_NAME=${NODE_NAME:-$(lab_node)}
+NODE_SCHED=$(kubectl get node "$NODE_NAME" -o jsonpath='{.spec.unschedulable}' 2>/dev/null)
 if [ "$NODE_SCHED" != "true" ]; then
-  print_pass "Task 1: 노드 docker-desktop이 스케줄 가능 상태 (uncordoned)"
+  print_pass "Task 1: 노드 $NODE_NAME이 스케줄 가능 상태 (uncordoned)"
   PASS=$((PASS+1))
 else
   print_fail "Task 1: 노드가 여전히 SchedulingDisabled 상태" \
-    "kubectl uncordon docker-desktop"
+    "kubectl uncordon $NODE_NAME"
 fi
 
 # Task 2: ConfigMap drain-verify의 node-cordoned 확인

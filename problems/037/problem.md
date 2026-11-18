@@ -31,7 +31,7 @@ Docker Desktop 환경에서는 컨트롤플레인 컴포넌트가 static pod 또
 
 4. ConfigMap `cluster-info`를 업데이트하여 모든 필드를 채우세요:
    - `*-type`: `static-pod` 또는 `deployment`
-   - `*-node`: 노드 이름 (예: `docker-desktop`)
+   - `*-node`: 노드 이름 (예: `docker-desktop`, kind 멀티 노드면 `desktop-control-plane`)
    - `*-image`: 전체 이미지 이름 (예: `registry.k8s.io/kube-apiserver:v1.28.2`)
 
 ## Expected Outcome
@@ -45,7 +45,7 @@ Docker Desktop 환경에서는 컨트롤플레인 컴포넌트가 static pod 또
 <summary>힌트 1</summary>
 
 `kubectl -n kube-system get pods -o wide`로 컨트롤플레인 Pod 목록과 노드를 확인합니다.
-Static pod는 이름 끝에 노드 이름이 붙습니다 (예: `kube-apiserver-docker-desktop`).
+Static pod는 이름 끝에 노드 이름이 붙습니다 (예: `kube-apiserver-docker-desktop`, 노드 이름은 `kubectl get nodes`로 확인).
 
 </details>
 

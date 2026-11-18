@@ -15,6 +15,7 @@ check_cluster
 init_namespace "$NAMESPACE"
 
 # 3. 현재 클러스터 버전 정보 ConfigMap 생성
+NODE_NAME=$(control_plane_node)
 CURRENT_VERSION=$(kubectl version -o json 2>/dev/null | grep -o '"gitVersion":"[^"]*"' | head -1 | cut -d'"' -f4)
 if [ -z "$CURRENT_VERSION" ]; then
   CURRENT_VERSION="v1.28.0"
@@ -29,14 +30,14 @@ metadata:
 data:
   current-version: "${CURRENT_VERSION}"
   target-version: "v1.29.0"
-  node-name: "docker-desktop"
+  node-name: "${NODE_NAME}"
   scenario: |
     현재 클러스터 버전: ${CURRENT_VERSION}
     목표 버전: v1.29.0
     
     시나리오:
-    - 단일 노드 클러스터 (control-plane + worker)
-    - 업그레이드 대상 노드: docker-desktop
+    - 업그레이드 대상: control-plane 노드
+    - 업그레이드 대상 노드: ${NODE_NAME}
     - 업그레이드 전 워크로드가 실행 중
     
     주의사항:

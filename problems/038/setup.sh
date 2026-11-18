@@ -15,13 +15,14 @@ check_cluster
 init_namespace "$NAMESPACE"
 
 # 3. 노드 이름 가져오기
-NODE_NAME=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
+# 일반 Pod가 뜰 수 있는 모든 노드에 taint (어느 노드에 레이블을 붙여도 toleration 필요)
 
 # 4. 노드에 taint 추가
-kubectl taint nodes "$NODE_NAME" dedicated=special:NoSchedule --overwrite 2>/dev/null || \
-  kubectl taint nodes "$NODE_NAME" dedicated=special:NoSchedule 2>/dev/null || true
+for NODE_NAME in $(lab_nodes); do
+  kubectl taint nodes "$NODE_NAME" dedicated=special:NoSchedule --overwrite >/dev/null 2>&1 || true
+done
 
-echo -e "${YELLOW}[INFO] 노드 '$NODE_NAME'에 taint 'dedicated=special:NoSchedule' 추가됨${NC}"
+echo -e "${YELLOW}[INFO] 노드 $(lab_nodes | tr '\n' ' ')에 taint 'dedicated=special:NoSchedule' 추가됨${NC}"
 
 # 5. nodeSelector가 있지만 레이블이 없는 Pod 생성 (Pending 상태)
 kubectl apply -n "$NAMESPACE" -f - <<EOF || fail_with_cleanup "$NAMESPACE" "Pod 생성 실패"

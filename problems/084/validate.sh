@@ -50,9 +50,8 @@ done
 
 if [ "$DNS_OK" = true ]; then
   # DNS 해석 테스트
-  DNS_RESULT=$(kubectl -n "$NAMESPACE" run dns-verify --image=busybox:1.36 --rm -i --restart=Never \
-    -- nslookup db-0.db-headless.${NAMESPACE}.svc.cluster.local 2>/dev/null)
-  if echo "$DNS_RESULT" | grep -q "Address"; then
+  DNS_RESULT=$(run_in_pod "$NAMESPACE" dns-verify busybox:1.36 nslookup db-0.db-headless.${NAMESPACE}.svc.cluster.local)
+  if echo "$DNS_RESULT" | grep -q "^Name:"; then
     print_pass "Task 3: StatefulSet Pod 개별 DNS 해석 성공 (db-0.db-headless)"
     PASS=$((PASS+1))
   else

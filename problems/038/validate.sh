@@ -9,17 +9,16 @@ TOTAL=0
 
 check_cluster
 
-NODE_NAME=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
 
 # Task 1: 노드에 disk=ssd 레이블 존재 확인
 TOTAL=$((TOTAL+1))
-DISK_LABEL=$(kubectl get node "$NODE_NAME" -o jsonpath='{.metadata.labels.disk}' 2>/dev/null)
-if [ "$DISK_LABEL" = "ssd" ]; then
-  print_pass "Task 1: 노드 '$NODE_NAME'에 레이블 'disk=ssd' 존재"
+DISK_NODES=$(kubectl get nodes -l disk=ssd -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
+if [ -n "$DISK_NODES" ]; then
+  print_pass "Task 1: 노드 '$DISK_NODES'에 레이블 'disk=ssd' 존재"
   PASS=$((PASS+1))
 else
-  print_fail "Task 1: 노드 '$NODE_NAME'에 레이블 'disk=ssd' 없음 (현재: $DISK_LABEL)" \
-    "kubectl label nodes $NODE_NAME disk=ssd"
+  print_fail "Task 1: 'disk=ssd' 레이블이 붙은 노드 없음" \
+    "kubectl label nodes $(lab_node) disk=ssd"
 fi
 
 # Task 2: Pod 존재 확인

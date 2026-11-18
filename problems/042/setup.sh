@@ -15,7 +15,7 @@ check_cluster
 init_namespace "$NAMESPACE"
 
 # 3. 노드에 zone 레이블 추가 (시뮬레이션)
-NODE_NAME=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
+NODE_NAME=$(lab_node)
 kubectl label node "$NODE_NAME" zone=a --overwrite 2>/dev/null || true
 
 # 4. 완료 메시지

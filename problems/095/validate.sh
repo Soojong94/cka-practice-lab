@@ -33,9 +33,8 @@ fi
 
 # Task 3: custom.local DNS 해석 테스트
 TOTAL=$((TOTAL+1))
-DNS_RESULT=$(kubectl -n "$NAMESPACE" run dns-verify --image=busybox:1.36 --rm -i --restart=Never \
-  -- nslookup test-svc.${NAMESPACE}.svc.custom.local 2>/dev/null)
-if echo "$DNS_RESULT" | grep -q "Address"; then
+DNS_RESULT=$(run_in_pod "$NAMESPACE" dns-verify busybox:1.36 nslookup test-svc.${NAMESPACE}.svc.custom.local)
+if echo "$DNS_RESULT" | grep -q "^Name:"; then
   print_pass "Task 3: custom.local 도메인 DNS 해석 성공"
   PASS=$((PASS+1))
 else

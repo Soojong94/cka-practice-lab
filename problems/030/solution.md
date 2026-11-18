@@ -15,7 +15,7 @@ kubectl -n cka-q030 describe pod manual-schedule-pod
 
 ```bash
 kubectl -n cka-q030 get configmap cluster-info -o jsonpath='{.data.node-name}'
-# 예: docker-desktop
+# 예: docker-desktop (멀티 노드 클러스터면 워커 노드 이름)
 ```
 
 ## Step 3: manual-schedule-pod 재생성

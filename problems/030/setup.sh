@@ -15,7 +15,7 @@ check_cluster
 init_namespace "$NAMESPACE"
 
 # 3. 현재 노드 이름 가져오기
-NODE_NAME=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
+NODE_NAME=$(lab_node)
 
 # 4. Pending 상태의 Pod 생성 (존재하지 않는 nodeSelector로 스케줄링 불가)
 kubectl apply -n "$NAMESPACE" -f - <<EOF || fail_with_cleanup "$NAMESPACE" "리소스 생성 실패"

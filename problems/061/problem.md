@@ -18,7 +18,7 @@
 
 1. ConfigMap `cluster-info`에서 현재 버전과 목표 버전을 확인하세요.
 
-2. 네임스페이스 `cka-q061`에 ConfigMap `upgrade-procedure`를 생성하고, `step1` 키에 control-plane 노드 업그레이드 전 수행할 drain 명령을 작성하세요. (노드 이름: docker-desktop)
+2. 네임스페이스 `cka-q061`에 ConfigMap `upgrade-procedure`를 생성하고, `step1` 키에 control-plane 노드 업그레이드 전 수행할 drain 명령을 작성하세요. (노드 이름: ConfigMap `cluster-info`의 `node-name` 값. Docker Desktop 기본은 `docker-desktop`)
 
 3. 같은 ConfigMap의 `step2` 키에 kubeadm upgrade 명령 시퀀스를 작성하세요. (kubeadm upgrade plan → kubeadm upgrade apply v1.29.0)
 
@@ -39,7 +39,7 @@
 
 노드 drain 명령:
 ```bash
-kubectl drain docker-desktop --ignore-daemonsets --delete-emptydir-data
+kubectl drain <node-name> --ignore-daemonsets --delete-emptydir-data
 ```
 
 </details>
@@ -60,7 +60,7 @@ kubeadm 업그레이드 순서:
 
 업그레이드 후 노드 복구:
 ```bash
-kubectl uncordon docker-desktop
+kubectl uncordon <node-name>
 ```
 
 </details>

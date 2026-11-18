@@ -22,12 +22,14 @@ fi
 # Task 2: step1에 drain 명령 포함
 TOTAL=$((TOTAL+1))
 STEP1=$(kubectl -n "$NAMESPACE" get configmap upgrade-procedure -o jsonpath='{.data.step1}' 2>/dev/null)
-if echo "$STEP1" | grep -q "drain" && echo "$STEP1" | grep -q "docker-desktop"; then
+NODE_NAME=$(kubectl -n "$NAMESPACE" get configmap cluster-info -o jsonpath='{.data.node-name}' 2>/dev/null)
+NODE_NAME=${NODE_NAME:-docker-desktop}
+if echo "$STEP1" | grep -q "drain" && echo "$STEP1" | grep -q "$NODE_NAME"; then
   print_pass "Task 2: step1에 drain 명령 포함"
   PASS=$((PASS+1))
 else
   print_fail "Task 2: step1에 drain 명령 미포함 (현재: '$STEP1')" \
-    "kubectl drain docker-desktop --ignore-daemonsets 형태의 명령을 작성하세요"
+    "kubectl drain $NODE_NAME --ignore-daemonsets 형태의 명령을 작성하세요"
 fi
 
 # Task 3: step2에 kubeadm upgrade 명령 포함
@@ -49,7 +51,7 @@ if echo "$STEP3" | grep -q "uncordon"; then
   PASS=$((PASS+1))
 else
   print_fail "Task 4: step3에 uncordon 명령 미포함 (현재: '$STEP3')" \
-    "kubectl uncordon docker-desktop"
+    "kubectl uncordon $NODE_NAME"
 fi
 
 # Task 5: upgrade-order 확인

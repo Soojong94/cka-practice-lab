@@ -13,7 +13,7 @@ kubectl -n cka-q038 describe pod ssd-pod
 ## Step 2: 노드에 레이블 추가
 
 ```bash
-NODE_NAME=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
+NODE_NAME=$(kubectl get nodes -l '!node-role.kubernetes.io/control-plane' -o jsonpath='{.items[0].metadata.name}')
 kubectl label nodes $NODE_NAME disk=ssd
 ```
 

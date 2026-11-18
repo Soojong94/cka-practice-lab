@@ -15,9 +15,10 @@ check_cluster
 init_namespace "$NAMESPACE"
 
 # 3. 노드에 taint 추가
-NODE_NAME=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
-kubectl taint nodes "$NODE_NAME" env=production:NoSchedule --overwrite 2>/dev/null || true
-echo -e "${GREEN}[OK] 노드 '$NODE_NAME'에 taint 'env=production:NoSchedule' 추가됨${NC}"
+for NODE_NAME in $(lab_nodes); do
+  kubectl taint nodes "$NODE_NAME" env=production:NoSchedule --overwrite >/dev/null 2>&1 || true
+done
+echo -e "${GREEN}[OK] 노드 $(lab_nodes | tr '\n' ' ')에 taint 'env=production:NoSchedule' 추가됨${NC}"
 
 # 4. 완료 메시지
 print_setup_complete "$NAMESPACE" "problems/044"

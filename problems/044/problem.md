@@ -66,7 +66,7 @@ kubectl taint nodes <node-name> env=production:NoSchedule-
 
 노드 이름 확인:
 ```bash
-kubectl get nodes -o jsonpath='{.items[0].metadata.name}'
+kubectl get nodes   # taint는 일반 Pod가 뜰 수 있는 모든 노드에 걸려 있음
 ```
 
 </details>

@@ -167,3 +167,115 @@ cleanup_problem() {
   fi
   echo -e "${GREEN}[OK] 모든 리소스 삭제 확인${NC}"
 }
+
+# 실습용 노드 선택
+# - Docker Desktop 기본(단일 노드): docker-desktop
+# - kind 등 멀티 노드: control-plane이 아닌 워커 노드
+# 일반 Pod가 스케줄될 수 있는 노드 목록 (이름순)
+lab_nodes() {
+  local nodes
+  nodes=$(kubectl get nodes -l '!node-role.kubernetes.io/control-plane' \
+    -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | sort)
+  [ -z "$nodes" ] && nodes=$(kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' 2>/dev/null | sort)
+  echo "$nodes"
+}
+# 문제에서 사용할 대표 노드 1개 (setup/validate/cleanup에서 항상 같은 노드)
+lab_node() {
+  lab_nodes | head -1
+}
+# control-plane 노드 이름 (단일 노드면 그 노드)
+control_plane_node() {
+  local n
+  n=$(kubectl get nodes -l 'node-role.kubernetes.io/control-plane' -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+  [ -z "$n" ] && n=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+  echo "$n"
+}
+
+# ---------------------------------------------------------------
+# CoreDNS 백업/복원 (CoreDNS를 건드리는 문제 018, 095에서 사용)
+# 원본 Corefile을 파일로 백업하고, cleanup 때 그대로 되돌림.
+# 이미 깨진 설정(중괄호 불일치)은 백업하지 않아 원본 백업을 덮어쓰지 않음.
+# ---------------------------------------------------------------
+COREDNS_BACKUP_FILE="/tmp/cka-coredns-Corefile"
+
+_corefile_ok() {
+  [ -n "$1" ] && [ "$(printf '%s' "$1" | tr -cd '{' | wc -c)" = "$(printf '%s' "$1" | tr -cd '}' | wc -c)" ]
+}
+
+coredns_backup() {
+  local cur
+  cur=$(kubectl -n kube-system get configmap coredns -o jsonpath='{.data.Corefile}' 2>/dev/null)
+  if _corefile_ok "$cur"; then
+    printf '%s\n' "$cur" > "$COREDNS_BACKUP_FILE"
+    echo -e "${GREEN}[OK] CoreDNS 원본 설정 백업: $COREDNS_BACKUP_FILE${NC}"
+  elif [ -f "$COREDNS_BACKUP_FILE" ]; then
+    echo -e "${YELLOW}[INFO] 현재 CoreDNS 설정이 이미 깨져 있어 기존 백업을 유지합니다${NC}"
+  else
+    echo -e "${RED}[ERROR] CoreDNS 설정을 백업할 수 없습니다 (현재 설정이 비정상)${NC}" >&2
+    return 1
+  fi
+}
+
+# Corefile 내용을 kube-system/coredns에 반영 (resourceVersion 충돌 없이 교체)
+coredns_apply() {
+  kubectl -n kube-system create configmap coredns --from-literal=Corefile="$1" \
+    --dry-run=client -o yaml | kubectl replace -f - >/dev/null
+}
+
+coredns_restore() {
+  if [ ! -f "$COREDNS_BACKUP_FILE" ]; then
+    echo -e "${YELLOW}[INFO] CoreDNS 백업 없음 (복원 생략)${NC}"
+    return 0
+  fi
+  echo -e "${YELLOW}[INFO] CoreDNS 원본 설정 복원 중...${NC}"
+  if ! coredns_apply "$(cat "$COREDNS_BACKUP_FILE")"; then
+    echo -e "${RED}[WARN] CoreDNS ConfigMap 복원 실패. 백업 파일: $COREDNS_BACKUP_FILE${NC}" >&2
+    return 1
+  fi
+  kubectl -n kube-system rollout restart deployment coredns >/dev/null 2>&1
+  if kubectl -n kube-system rollout status deployment coredns --timeout=90s >/dev/null 2>&1; then
+    rm -f "$COREDNS_BACKUP_FILE"
+    echo -e "${GREEN}[OK] CoreDNS 원본 설정 복원 및 재시작 완료${NC}"
+  else
+    echo -e "${RED}[WARN] CoreDNS 설정은 복원했지만 Pod가 아직 Ready가 아닙니다${NC}" >&2
+    echo "  kubectl -n kube-system get pods -l k8s-app=kube-dns 로 확인하세요." >&2
+    return 1
+  fi
+}
+
+# ---------------------------------------------------------------
+# 스토리지: 클러스터에 있는 동적 provisioner 사용
+# Docker Desktop(kubeadm): docker.io/hostpath, kind: rancher.io/local-path
+# ---------------------------------------------------------------
+storage_provisioner() {
+  local p
+  p=$(kubectl get storageclass hostpath -o jsonpath='{.provisioner}' 2>/dev/null)
+  [ -z "$p" ] && p=$(kubectl get storageclass -o jsonpath='{range .items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")]}{.provisioner}{"\n"}{end}' 2>/dev/null | head -1)
+  echo "${p:-docker.io/hostpath}"
+}
+
+# local-path provisioner는 Immediate 바인딩을 지원하지 않음
+storage_binding_mode() {
+  if [ "$(storage_provisioner)" = "rancher.io/local-path" ]; then
+    echo "WaitForFirstConsumer"
+  else
+    echo "Immediate"
+  fi
+}
+
+# 클러스터 안에서 일회성 명령을 실행하고 출력을 돌려줌
+# (kubectl run --rm -i 는 Windows Git Bash에서 출력이 비어 오므로 사용하지 않음)
+# 사용법: run_in_pod <namespace> <pod-name> <image> <command> [args...]
+run_in_pod() {
+  local ns=$1 name=$2 image=$3 i phase
+  shift 3
+  kubectl -n "$ns" delete pod "$name" --ignore-not-found --now >/dev/null 2>&1
+  kubectl -n "$ns" run "$name" --image="$image" --restart=Never --command -- "$@" >/dev/null 2>&1 || return 1
+  for ((i = 0; i < 60; i++)); do
+    phase=$(kubectl -n "$ns" get pod "$name" -o jsonpath='{.status.phase}' 2>/dev/null)
+    [[ $phase == Succeeded || $phase == Failed ]] && break
+    sleep 1
+  done
+  kubectl -n "$ns" logs "$name" 2>/dev/null
+  kubectl -n "$ns" delete pod "$name" --now --wait=false >/dev/null 2>&1
+}

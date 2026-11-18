@@ -10,7 +10,7 @@ TOTAL=0
 check_cluster
 
 # 현재 노드 이름
-NODE_NAME=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
+NODE_NAME=$(lab_node)
 
 # Task 1: manual-schedule-pod Running 상태
 TOTAL=$((TOTAL+1))
@@ -45,11 +45,11 @@ fi
 # Task 4: normal-pod가 올바른 노드에 스케줄링됨
 TOTAL=$((TOTAL+1))
 POD2_NODE=$(kubectl -n "$NAMESPACE" get pod normal-pod -o jsonpath='{.spec.nodeName}' 2>/dev/null)
-if [ "$POD2_NODE" = "$NODE_NAME" ]; then
-  print_pass "Task 4: Pod 'normal-pod' 올바른 노드에 스케줄링됨 ($NODE_NAME)"
+if [ -n "$POD2_NODE" ]; then
+  print_pass "Task 4: Pod 'normal-pod'가 scheduler에 의해 노드에 배치됨 ($POD2_NODE)"
   PASS=$((PASS+1))
 else
-  print_fail "Task 4: Pod 'normal-pod' 노드 불일치 (현재: $POD2_NODE, 기대: $NODE_NAME)" "scheduler가 자동으로 스케줄링합니다"
+  print_fail "Task 4: Pod 'normal-pod'가 노드에 배치되지 않음" "scheduler가 자동으로 스케줄링합니다"
 fi
 
 # 최종 점수

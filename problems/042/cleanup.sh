@@ -8,8 +8,7 @@ check_cluster
 echo -e "${YELLOW}[INFO] Problem 042 환경 정리 시작...${NC}"
 
 # 노드 레이블 제거
-NODE_NAME=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
-kubectl label node "$NODE_NAME" zone- 2>/dev/null || true
+kubectl label nodes --all zone- 2>/dev/null || true
 
 # 네임스페이스(cka-q042*)와 그 PV, 아래 클러스터 리소스를 한 번에 정리
 cleanup_problem 042 || exit 1

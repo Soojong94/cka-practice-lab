@@ -126,13 +126,13 @@ app.post('/api/problems/:id/:action', (req, res) => {
   const cmd = `${useBash} "${scriptUnixPath}"`;
   exec(cmd, {
     cwd: __dirname,
-    timeout: 120000,
+    timeout: 240000,
     env: { ...process.env, TERM: 'dumb' },
     shell: true
   }, (error, stdout, stderr) => {
     let output = stripAnsi(stdout + (stderr ? '\n' + stderr : ''));
     if (error && error.killed) {
-      output += `\n[ERROR] ${action}.sh가 120초 안에 끝나지 않아 중단됐습니다. 출력이 중간에 끊겼을 수 있습니다.`;
+      output += `\n[ERROR] ${action}.sh가 240초 안에 끝나지 않아 중단됐습니다. 출력이 중간에 끊겼을 수 있습니다.`;
     }
     res.json({
       success: !error,

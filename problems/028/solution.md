@@ -13,7 +13,11 @@ kubectl get storageclass
 # fast-ssd StorageClass가 없음
 ```
 
-## 방법 1: StorageClass 생성 (Docker Desktop hostpath provisioner 사용)
+## 방법 1: StorageClass 생성 (기존 hostpath StorageClass와 같은 provisioner 사용)
+
+```bash
+kubectl get storageclass hostpath   # PROVISIONER 확인 (Docker Desktop: docker.io/hostpath, kind: rancher.io/local-path)
+```
 
 ```bash
 kubectl apply -f - <<EOF
@@ -21,8 +25,8 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: fast-ssd
-provisioner: docker.io/hostpath
-volumeBindingMode: Immediate
+provisioner: docker.io/hostpath   # kind라면 rancher.io/local-path
+volumeBindingMode: Immediate       # local-path라면 WaitForFirstConsumer
 EOF
 ```
 

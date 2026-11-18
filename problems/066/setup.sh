@@ -15,7 +15,10 @@ check_cluster
 init_namespace "$NAMESPACE"
 
 # 3. 노드가 스케줄 가능한 상태인지 확인 (이전 실행 잔여물 정리)
-kubectl uncordon docker-desktop 2>/dev/null || true
+NODE_NAME=$(lab_node)
+kubectl uncordon "$NODE_NAME" >/dev/null 2>&1 || true
+kubectl -n "$NAMESPACE" create configmap drain-target --from-literal=node="$NODE_NAME" >/dev/null
+echo -e "${YELLOW}[INFO] 실습 대상 노드: $NODE_NAME (ConfigMap drain-target)${NC}"
 
 # 4. Deployment 생성
 kubectl -n "$NAMESPACE" apply -f - <<EOF || fail_with_cleanup "$NAMESPACE" "리소스 생성 실패"

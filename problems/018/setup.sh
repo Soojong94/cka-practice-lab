@@ -16,38 +16,12 @@ init_namespace "$NAMESPACE"
 
 # 3. 기존 CoreDNS ConfigMap 백업
 echo -e "${YELLOW}[INFO] CoreDNS ConfigMap 백업 중...${NC}"
-kubectl -n kube-system get configmap coredns -o yaml > /tmp/coredns-backup.yaml 2>/dev/null
+coredns_backup || fail_with_cleanup "$NAMESPACE" "CoreDNS 백업 실패"
 
-# 4. CoreDNS ConfigMap을 잘못된 설정으로 변경 (닫는 중괄호 누락)
-kubectl -n kube-system apply -f - <<'EOF' || fail_with_cleanup "$NAMESPACE" "CoreDNS ConfigMap 수정 실패"
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: coredns
-  namespace: kube-system
-data:
-  Corefile: |
-    .:53 {
-        errors
-        health {
-           lameduck 5s
-        }
-        ready
-        kubernetes cluster.local in-addr.arpa ip6.arpa {
-           pods insecure
-           fallthrough in-addr.arpa ip6.arpa
-           ttl 30
-
-        prometheus :9153
-        forward . /etc/resolv.conf {
-           max_concurrent 1000
-        }
-        cache 30
-        loop
-        reload
-        loadbalance
-    }
-EOF
+# 4. CoreDNS ConfigMap을 잘못된 설정으로 변경 (kubernetes 블록의 닫는 중괄호 누락)
+#    클러스터의 현재 설정을 기준으로 } 한 줄만 제거 (Docker Desktop / kind 모두 동작)
+BROKEN=$(awk 'k && /^[[:space:]]*}[[:space:]]*$/ {k=0; next} /^[[:space:]]*kubernetes / {k=1} {print}' "$COREDNS_BACKUP_FILE")
+coredns_apply "$BROKEN" || fail_with_cleanup "$NAMESPACE" "CoreDNS ConfigMap 수정 실패"
 
 # 5. CoreDNS Pod 재시작하여 오류 발생시킴
 kubectl -n kube-system rollout restart deployment coredns 2>/dev/null
@@ -61,7 +35,7 @@ kind: ConfigMap
 metadata:
   name: coredns-backup-info
 data:
-  note: "CoreDNS 원본 설정이 /tmp/coredns-backup.yaml에 백업되어 있습니다."
+  note: "CoreDNS 원본 설정이 /tmp/cka-coredns-Corefile에 백업되어 있습니다. cleanup 시 자동 복원됩니다."
   hint: "kubernetes 블록의 닫는 중괄호(})가 누락되어 있습니다."
 EOF
 

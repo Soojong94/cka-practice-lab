@@ -43,7 +43,7 @@ fi
 # Task 4: Service를 통한 접근 테스트
 TOTAL=$((TOTAL+1))
 SVC_IP=$(kubectl -n "$NAMESPACE" get svc web-svc -o jsonpath='{.spec.clusterIP}' 2>/dev/null)
-CURL_RESULT=$(kubectl -n "$NAMESPACE" run curl-test --image=curlimages/curl:8.4.0 --restart=Never --rm -i --timeout=30s -- curl -s -o /dev/null -w "%{http_code}" "http://${SVC_IP}:80" 2>/dev/null)
+CURL_RESULT=$(run_in_pod "$NAMESPACE" curl-test curlimages/curl:8.4.0 curl -s -m 10 -o /dev/null -w "%{http_code}" "http://${SVC_IP}:80")
 if echo "$CURL_RESULT" | grep -q "200"; then
   print_pass "Task 4: Service를 통한 접근 성공 (HTTP 200)"
   PASS=$((PASS+1))

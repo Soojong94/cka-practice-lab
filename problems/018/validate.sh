@@ -35,8 +35,8 @@ fi
 # Task 3: DNS 해석 테스트
 TOTAL=$((TOTAL+1))
 # 테스트용 Pod로 DNS 확인
-DNS_RESULT=$(kubectl -n "$NAMESPACE" run dns-test --image=busybox:1.36 --restart=Never --rm -i --timeout=30s -- nslookup kubernetes.default.svc.cluster.local 2>/dev/null)
-if echo "$DNS_RESULT" | grep -q "Address"; then
+DNS_RESULT=$(run_in_pod "$NAMESPACE" dns-test busybox:1.36 nslookup kubernetes.default.svc.cluster.local)
+if echo "$DNS_RESULT" | grep -q "^Name:"; then
   print_pass "Task 3: DNS 해석 정상 동작 (kubernetes.default.svc.cluster.local)"
   PASS=$((PASS+1))
 else

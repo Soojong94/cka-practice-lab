@@ -8,8 +8,7 @@ check_cluster
 echo -e "${YELLOW}[INFO] Problem 044 환경 정리 시작...${NC}"
 
 # 노드 taint 제거 (남아있을 수 있으므로)
-NODE_NAME=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
-kubectl taint nodes "$NODE_NAME" env=production:NoSchedule- 2>/dev/null || true
+kubectl taint nodes --all env=production:NoSchedule- 2>/dev/null || true
 
 # 네임스페이스(cka-q044*)와 그 PV, 아래 클러스터 리소스를 한 번에 정리
 cleanup_problem 044 || exit 1

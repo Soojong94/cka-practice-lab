@@ -3,7 +3,8 @@
 ## Step 1: 노드 Cordon
 
 ```bash
-kubectl cordon docker-desktop
+NODE=$(kubectl -n cka-q066 get configmap drain-target -o jsonpath='{.data.node}')
+kubectl cordon $NODE
 ```
 
 ## Step 2: Cordon 상태 확인 및 ConfigMap 생성
@@ -12,7 +13,7 @@ kubectl cordon docker-desktop
 # SchedulingDisabled 확인
 kubectl get nodes
 # NAME             STATUS                     ROLES           AGE   VERSION
-# docker-desktop   Ready,SchedulingDisabled   control-plane   ...   ...
+# <node>   Ready,SchedulingDisabled   <roles>   ...   ...
 
 # ConfigMap 생성 (먼저 cordon 상태 기록)
 kubectl -n cka-q066 create configmap drain-verify \
@@ -23,7 +24,7 @@ kubectl -n cka-q066 create configmap drain-verify \
 ## Step 3: 노드 Drain
 
 ```bash
-kubectl drain docker-desktop --delete-emptydir-data --ignore-daemonsets --force
+kubectl drain $NODE --delete-emptydir-data --ignore-daemonsets --force
 ```
 
 ## Step 4: Drain 후 상태 확인
@@ -36,7 +37,7 @@ kubectl -n cka-q066 get pods
 ## Step 5: 노드 Uncordon
 
 ```bash
-kubectl uncordon docker-desktop
+kubectl uncordon $NODE
 
 # Pod 재스케줄 대기
 kubectl -n cka-q066 wait --for=condition=Ready pod -l app=web-app --timeout=60s

@@ -8,8 +8,9 @@ check_cluster
 echo -e "${YELLOW}[INFO] Problem 066 환경 정리 시작...${NC}"
 
 # 노드 uncordon (안전을 위해)
-kubectl uncordon docker-desktop 2>/dev/null && \
-  echo -e "${GREEN}[OK] 노드 'docker-desktop' uncordon됨${NC}" || true
+NODE_NAME=$(lab_node)
+kubectl uncordon "$NODE_NAME" >/dev/null 2>&1 && \
+  echo -e "${GREEN}[OK] 노드 '$NODE_NAME' uncordon됨${NC}" || true
 
 # 네임스페이스(cka-q066*)와 그 PV, 아래 클러스터 리소스를 한 번에 정리
 cleanup_problem 066 || exit 1

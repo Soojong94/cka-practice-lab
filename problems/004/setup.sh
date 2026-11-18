@@ -20,10 +20,10 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: expandable-sc
-provisioner: docker.io/hostpath
+provisioner: $(storage_provisioner)
 allowVolumeExpansion: true
 reclaimPolicy: Delete
-volumeBindingMode: Immediate
+volumeBindingMode: $(storage_binding_mode)
 EOF
 
 # 4. PVC 생성 (1Gi)

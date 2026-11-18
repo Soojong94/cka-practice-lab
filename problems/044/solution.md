@@ -46,8 +46,8 @@ kubectl -n cka-q044 get pods
 ## Step 4: Taint 제거
 
 ```bash
-NODE_NAME=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
-kubectl taint nodes $NODE_NAME env=production:NoSchedule-
+# taint가 걸린 모든 노드에서 제거
+kubectl taint nodes --all env=production:NoSchedule-
 ```
 
 ## Step 5: dev-app Running 확인

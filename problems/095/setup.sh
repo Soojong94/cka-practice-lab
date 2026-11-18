@@ -16,12 +16,7 @@ init_namespace "$NAMESPACE"
 
 # 3. CoreDNS ConfigMap 백업
 echo -e "${YELLOW}[INFO] CoreDNS ConfigMap 백업 중...${NC}"
-COREDNS_CM=$(kubectl -n kube-system get configmap coredns -o yaml 2>/dev/null)
-if [ -n "$COREDNS_CM" ]; then
-  kubectl -n "$NAMESPACE" create configmap coredns-backup \
-    --from-literal=Corefile="$(kubectl -n kube-system get configmap coredns -o jsonpath='{.data.Corefile}')" 2>/dev/null || true
-  echo -e "${GREEN}[OK] CoreDNS ConfigMap 백업 완료${NC}"
-fi
+coredns_backup || fail_with_cleanup "$NAMESPACE" "CoreDNS 백업 실패"
 
 # 4. 테스트용 Service 생성
 kubectl apply -n "$NAMESPACE" -f - <<EOF || fail_with_cleanup "$NAMESPACE" "리소스 생성 실패"

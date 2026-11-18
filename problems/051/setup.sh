@@ -15,7 +15,7 @@ check_cluster
 init_namespace "$NAMESPACE"
 
 # 3. 노드에 zone 레이블 추가
-NODE_NAME=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
+NODE_NAME=$(lab_node)
 kubectl label node "$NODE_NAME" topology.kubernetes.io/zone=zone-a --overwrite 2>/dev/null || true
 echo -e "${GREEN}[OK] 노드 '$NODE_NAME'에 레이블 topology.kubernetes.io/zone=zone-a 추가됨${NC}"
 

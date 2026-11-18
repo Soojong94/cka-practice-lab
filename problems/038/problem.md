@@ -46,7 +46,8 @@
 
 노드 레이블 추가:
 ```bash
-kubectl label nodes docker-desktop disk=ssd
+kubectl get nodes   # 노드 이름 확인 (Docker Desktop: docker-desktop)
+kubectl label nodes <node-name> disk=ssd
 ```
 
 </details>

@@ -42,11 +42,10 @@ fi
 
 # Task 3: Taint 제거 확인
 TOTAL=$((TOTAL+1))
-NODE_NAME=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}')
-TAINTS=$(kubectl get node "$NODE_NAME" -o jsonpath='{.spec.taints}' 2>/dev/null)
-if echo "$TAINTS" | grep -q "env"; then
-  print_fail "Task 3: 노드에 env taint가 아직 존재함" \
-    "kubectl taint nodes $NODE_NAME env=production:NoSchedule- 으로 제거"
+TAINTED=$(kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{" "}{.spec.taints[?(@.key=="env")].key}{"\n"}{end}' 2>/dev/null | awk '$2=="env"{print $1}' | tr '\n' ' ')
+if [ -n "$TAINTED" ]; then
+  print_fail "Task 3: env taint가 아직 남은 노드: $TAINTED" \
+    "kubectl taint nodes --all env=production:NoSchedule- 으로 제거"
 else
   print_pass "Task 3: 노드에서 env taint 제거됨"
   PASS=$((PASS+1))

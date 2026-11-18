@@ -17,7 +17,7 @@
 
 ## Tasks
 
-1. 노드 `docker-desktop`을 cordon하여 새로운 Pod가 스케줄되지 않도록 하세요.
+1. 실습 대상 노드(ConfigMap `drain-target`의 `node` 값, Docker Desktop 기본은 `docker-desktop`)를 cordon하여 새로운 Pod가 스케줄되지 않도록 하세요.
 
 2. 노드가 `SchedulingDisabled` 상태인지 확인하고, ConfigMap `drain-verify`의 `node-cordoned` 키에 `true`를 저장하세요.
 
@@ -38,7 +38,8 @@
 
 노드 cordon:
 ```bash
-kubectl cordon docker-desktop
+NODE=$(kubectl -n cka-q066 get configmap drain-target -o jsonpath='{.data.node}')
+kubectl cordon $NODE
 kubectl get nodes  # STATUS에 SchedulingDisabled 확인
 ```
 
@@ -49,7 +50,7 @@ kubectl get nodes  # STATUS에 SchedulingDisabled 확인
 
 노드 drain:
 ```bash
-kubectl drain docker-desktop --delete-emptydir-data --ignore-daemonsets --force
+kubectl drain $NODE --delete-emptydir-data --ignore-daemonsets --force
 ```
 단일 노드 클러스터에서는 drain 후 Pod가 Pending 상태가 됩니다.
 
@@ -60,7 +61,7 @@ kubectl drain docker-desktop --delete-emptydir-data --ignore-daemonsets --force
 
 노드 uncordon:
 ```bash
-kubectl uncordon docker-desktop
+kubectl uncordon $NODE
 # Pod가 다시 스케줄되어 Running 상태가 됩니다
 kubectl -n cka-q066 wait --for=condition=Ready pod -l app=web-app --timeout=60s
 ```

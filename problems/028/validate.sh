@@ -21,8 +21,13 @@ fi
 # Task 2: PVC Bound 상태
 TOTAL=$((TOTAL+1))
 PVC_STATUS=$(kubectl -n "$NAMESPACE" get pvc data-pvc -o jsonpath='{.status.phase}' 2>/dev/null)
+PVC_SC_NAME=$(kubectl -n "$NAMESPACE" get pvc data-pvc -o jsonpath='{.spec.storageClassName}' 2>/dev/null)
+PVC_SC_MODE=$(kubectl get storageclass "$PVC_SC_NAME" -o jsonpath='{.volumeBindingMode}' 2>/dev/null)
 if [ "$PVC_STATUS" = "Bound" ]; then
   print_pass "Task 2: PVC 'data-pvc' Bound 상태"
+  PASS=$((PASS+1))
+elif [ "$PVC_STATUS" = "Pending" ] && [ "$PVC_SC_MODE" = "WaitForFirstConsumer" ]; then
+  print_pass "Task 2: PVC 'data-pvc' 프로비저닝 대기 (StorageClass '$PVC_SC_NAME'은 WaitForFirstConsumer: Pod가 사용하면 Bound)"
   PASS=$((PASS+1))
 else
   print_fail "Task 2: PVC 'data-pvc' Bound 아님 (현재: $PVC_STATUS)" "StorageClass를 생성하거나 PVC의 storageClassName을 수정하세요"

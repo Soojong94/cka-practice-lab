@@ -23,11 +23,12 @@
    - `kubectl get storageclass`
 
 3. 다음 중 하나의 방법으로 PVC를 Bound 상태로 만드세요:
-   - **방법 A**: StorageClass `fast-ssd`를 생성 (Docker Desktop의 `docker.io/hostpath` provisioner 사용)
+   - **방법 A**: StorageClass `fast-ssd`를 생성 (기존 `hostpath` StorageClass와 같은 provisioner 사용: Docker Desktop은 `docker.io/hostpath`, kind는 `rancher.io/local-path`)
    - **방법 B**: PVC를 삭제하고 기존 StorageClass(`hostpath`)를 사용하도록 재생성
    - **방법 C**: 수동으로 PV를 생성하여 PVC에 바인딩
 
 4. PVC가 Bound 상태인지 확인하세요.
+   - `volumeBindingMode: WaitForFirstConsumer`인 StorageClass(kind의 local-path 등)는 PVC를 사용하는 Pod가 생겨야 Bound됩니다. 이 경우 Pending이어도 정상으로 채점합니다.
 
 ## Expected Outcome
 
